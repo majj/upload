@@ -1,0 +1,10 @@
+
+
+[app]
+
+ALLOWED_EXTENSIONS = ["xls","xlsx"]
+
+PORT = 6680
+
+UPLOAD_FOLDER = "E:/mabodev/upload/app/files"
+URL = "/"

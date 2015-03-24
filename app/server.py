@@ -3,12 +3,23 @@
 
 
 import os
+import toml
+
 from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
 
 import traceback
 
-UPLOAD_FOLDER = r'E:\mabodev\upload\app\files'
+from xls import load
+
+with open("config.toml") as confh:
+            config = toml.loads(confh.read()) 
+
+conf = config["app"]
+
+UPLOAD_FOLDER = conf["UPLOAD_FOLDER"]#r'E:\mabodev\upload\app\files'
+
+PORT = conf["PORT"]
 
 ALLOWED_EXTENSIONS = set(['json', 'xls', 'xlsx', 'csv'])
 
@@ -25,12 +36,13 @@ def allowed_file(filename):
     
     val = '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-    print("val:%s" %(val) )       
+    #print("val:%s" %(val) )       
     return val
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def upload_file():
     
+   
     if request.method == 'POST':
         
         file = request.files['file']
@@ -43,16 +55,41 @@ def upload_file():
             
             try:
                 
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                fullname = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 
-                notify(filename)
+                file.save(fullname)
+                
+                #notify(filename)
+                
+                v = load(fullname)
+                
+                #print v
                 
             except Exception as ex:
                 
+                print ex
+                print traceback.format_exc()
                 pass
             
             
-            return redirect(url_for('upload_file'))
+            return  '''
+    <!doctype html>
+    <html>
+    <head>
+    <title></title>
+    </head>
+    <body>
+    <h1>Upload new File</h1>
+    <form action="/" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value="Upload">
+    </form>
+    %s
+    </body>
+    </html>
+    ''' %(str(v))
+    
+            #redirect(url_for('upload_file'))
             #print traceback.format_exc()
         else:
             print("wrong file type")
@@ -65,7 +102,7 @@ def upload_file():
     </head>
     <body>
     <h1>Upload new File</h1>
-    <form action="/upload" method=post enctype=multipart/form-data>
+    <form action="/" method=post enctype=multipart/form-data>
       <p><input type=file name=file>
          <input type=submit value="Upload">
     </form>
@@ -76,5 +113,5 @@ def upload_file():
     
 if __name__ == '__main__':
     
-    app.run(port=6680)
+    app.run(port=PORT)
 
